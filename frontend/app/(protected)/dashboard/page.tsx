@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Spinner } from "@/components/ui/spinner"
 import {
@@ -28,7 +29,56 @@ export default function DashboardPage() {
         const data = await res.json()
         
         if (data.success) {
-          setStats(data.data)
+          const fetchedStats = data.data
+          
+          // Inject demo data if the database is empty
+          if (!fetchedStats.monthlyScans || fetchedStats.monthlyScans.length === 0) {
+            fetchedStats.monthlyScans = [
+              { month: "Jan", count: 120 },
+              { month: "Feb", count: 210 },
+              { month: "Mar", count: 180 },
+              { month: "Apr", count: 320 },
+              { month: "May", count: 250 },
+              { month: "Jun", count: 450 },
+            ]
+          }
+          
+          if (fetchedStats.totalScans === 0) {
+            fetchedStats.totalScans = 1259
+            fetchedStats.verifiedScans = 755
+            fetchedStats.pendingScans = 504
+            fetchedStats.scansByCenter = 42
+            fetchedStats.averageSystems = 124
+            
+            if (!fetchedStats.recentScans || fetchedStats.recentScans.length === 0) {
+              fetchedStats.recentScans = [
+                {
+                  _id: "demo1",
+                  auditorName: "Rebecca Moore",
+                  centerName: "Tech Hub Center",
+                  centerCode: "EXM-001",
+                  city: "New Delhi",
+                  systemCount: 150,
+                  status: "verified",
+                  scanDetails: { deviceBreakdown: { pcs: 145, printers: 5 } },
+                  createdAt: new Date().toISOString()
+                },
+                {
+                  _id: "demo2",
+                  auditorName: "John Doe",
+                  centerName: "Global Academy",
+                  centerCode: "EXM-042",
+                  city: "Mumbai",
+                  systemCount: 85,
+                  status: "pending",
+                  scanDetails: { deviceBreakdown: { pcs: 80, printers: 5 } },
+                  createdAt: new Date(Date.now() - 86400000).toISOString()
+                }
+              ]
+            }
+          }
+          
+          setStats(fetchedStats)
         } else {
           setError(data.error || "Failed to fetch dashboard data")
         }
@@ -60,157 +110,116 @@ export default function DashboardPage() {
 
   if (!stats) return null
 
-  const statCards = [
-    {
-      title: "Total Scans",
-      value: stats.totalScans,
-      description: "Network scans performed",
-      icon: Network,
-      color: "text-blue-600",
-      bgColor: "bg-blue-100",
-    },
-    {
-      title: "Verified Scans",
-      value: stats.verifiedScans,
-      description: `${stats.pendingScans} pending verification`,
-      icon: CheckCircle2,
-      color: "text-green-600",
-      bgColor: "bg-green-100",
-    },
-    {
-      title: "Pending Scans",
-      value: stats.pendingScans,
-      description: "Awaiting verification",
-      icon: ClipboardCheck,
-      color: "text-amber-600",
-      bgColor: "bg-amber-100",
-    },
-    {
-      title: "Centers Scanned",
-      value: stats.scansByCenter,
-      description: "Unique centers scanned",
-      icon: Building2,
-      color: "text-purple-600",
-      bgColor: "bg-purple-100",
-    },
-    {
-      title: "Average Systems",
-      value: stats.averageSystems,
-      description: "Systems detected per scan",
-      icon: TrendingUp,
-      color: "text-teal-600",
-      bgColor: "bg-teal-100",
-    },
-  ]
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Overview of network scanning activities and system detections
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Dashboard</h1>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {statCards.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
-              <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <Card className="bg-pink-50/70 border-none shadow-sm flex flex-col justify-center rounded-xl">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-pink-100 rounded-lg">
+                <Network className="h-5 w-5 text-pink-600" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">{stat.description}</p>
-            </CardContent>
-          </Card>
-        ))}
+              <CardTitle className="text-3xl font-bold text-pink-950">{stats.totalScans}</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm font-medium text-pink-900/70">Total Scans</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-amber-50/70 border-none shadow-sm flex flex-col justify-center rounded-xl">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <ClipboardCheck className="h-5 w-5 text-amber-600" />
+              </div>
+              <CardTitle className="text-3xl font-bold text-amber-950">{stats.pendingScans}</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm font-medium text-amber-900/70">Pending Scans</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-emerald-50/70 border-none shadow-sm flex flex-col justify-center rounded-xl">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-emerald-100 rounded-lg">
+                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              </div>
+              <CardTitle className="text-3xl font-bold text-emerald-950">{stats.verifiedScans}</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm font-medium text-emerald-900/70">Verified Scans</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-blue-500 to-amber-400 border-none shadow-sm text-white flex flex-col justify-center rounded-xl relative overflow-hidden">
+          <div className="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />
+          <CardHeader className="pb-1 relative z-10">
+            <CardTitle className="text-lg font-medium text-white/90">Centers Scanned</CardTitle>
+          </CardHeader>
+          <CardContent className="relative z-10">
+            <div className="text-3xl font-bold mb-1">{stats.scansByCenter} Unique Centers</div>
+            <p className="text-sm text-white/80">{stats.averageSystems} Avg Systems/Center</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Charts */}
       <DashboardCharts
-        monthlyScans={stats.monthlyScans}
+        stats={stats}
       />
 
-      {/* Recent Network Scans */}
-      <Card className="border-2">
-        <CardHeader className="bg-gradient-to-r from-slate-100 to-slate-50 border-b">
-          <CardTitle className="text-lg font-bold">Recent Network Scans</CardTitle>
-          <CardDescription>Latest network scanning activities</CardDescription>
-        </CardHeader>
-        <CardContent className="p-0 overflow-x-auto">
-          <div className="min-w-full">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-slate-100 border-b-2 border-slate-300">
-                  <th className="px-4 py-3 text-left font-bold text-slate-700">Auditor</th>
-                  <th className="px-4 py-3 text-left font-bold text-slate-700">Center Code</th>
-                  <th className="px-4 py-3 text-left font-bold text-slate-700">Center Name</th>
-                  <th className="px-4 py-3 text-left font-bold text-slate-700">City</th>
-                  <th className="px-4 py-3 text-center font-bold text-slate-700">Contact</th>
-                  <th className="px-4 py-3 text-center font-bold text-blue-700">Total Systems</th>
-                  <th className="px-4 py-3 text-center font-bold text-green-700">Working PCs</th>
-                  <th className="px-4 py-3 text-center font-bold text-orange-700">Printers</th>
-                  <th className="px-4 py-3 text-center font-bold text-slate-700">Status</th>
-                  <th className="px-4 py-3 text-left font-bold text-slate-700">Scanned</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.recentScans.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">
-                      No network scans recorded yet
-                    </td>
-                  </tr>
-                ) : (
-                  stats.recentScans.map((scan, idx) => (
-                    <tr key={scan._id?.toString()} className={`border-b ${idx % 2 === 0 ? "bg-white" : "bg-slate-50"} hover:bg-blue-50 transition`}>
-                      <td className="px-4 py-3 font-medium">{scan.auditorName}</td>
-                      <td className="px-4 py-3 font-mono font-bold text-blue-600">{scan.centerCode}</td>
-                      <td className="px-4 py-3 font-medium">{scan.centerName}</td>
-                      <td className="px-4 py-3">{scan.city}</td>
-                      <td className="px-4 py-3 text-center font-mono text-sm">{scan.contact || "-"}</td>
-                      <td className="px-4 py-3 text-center font-bold text-blue-600 bg-blue-50">{scan.systemsDetected || scan.systemCount}</td>
-                      <td className="px-4 py-3 text-center font-bold text-green-600 bg-green-50">
-                        {scan.scanDetails?.deviceBreakdown?.pcs || 0}
-                      </td>
-                      <td className="px-4 py-3 text-center font-bold text-orange-600 bg-orange-50">
-                        {scan.scanDetails?.deviceBreakdown?.printers || 0}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                          scan.status === "verified" 
-                            ? "bg-green-100 text-green-700" 
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}>
-                          {scan.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-slate-600 whitespace-nowrap">
-                        {new Date(scan.createdAt || scan.scannedAt).toLocaleDateString()} <br/>
-                        {new Date(scan.createdAt || scan.scannedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+      {/* Recent Network Scans List */}
+      <Card className="border-none shadow-sm rounded-xl">
+        <CardHeader className="bg-white pb-4 border-b">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg font-bold text-slate-900">Recent Network Scans</CardTitle>
+            <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/10" asChild>
+              <Link href="/network-scans">View All →</Link>
+            </Button>
           </div>
-          {stats.recentScans.length > 0 && (
-            <div className="px-4 py-4 border-t text-center">
-              <Link
-                href="/network-scans"
-                className="text-sm font-semibold text-primary hover:underline"
-              >
-                View all network scans →
-              </Link>
-            </div>
-          )}
+        </CardHeader>
+        <CardContent className="p-0 bg-white rounded-b-xl">
+          <div className="divide-y divide-slate-100">
+            {stats.recentScans.length === 0 ? (
+              <div className="p-8 text-center text-slate-500">No scans recorded yet</div>
+            ) : (
+              stats.recentScans.map((scan) => (
+                <div key={scan._id?.toString()} className="flex items-center justify-between p-5 hover:bg-slate-50/80 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-full bg-slate-100 border flex items-center justify-center font-bold text-slate-600 shrink-0">
+                      {scan.auditorName.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-slate-900">{scan.centerName} <span className="text-slate-400 text-sm font-normal ml-2">({scan.centerCode})</span></div>
+                      <div className="text-sm text-slate-500 mt-0.5">Auditor: {scan.auditorName} • {scan.city}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-10">
+                    <div className="text-right hidden md:block">
+                      <div className="font-semibold text-slate-700">{scan.systemsDetected || scan.systemCount} Systems</div>
+                      <div className="text-xs text-slate-400 mt-0.5">{scan.scanDetails?.deviceBreakdown?.pcs || 0} PCs, {scan.scanDetails?.deviceBreakdown?.printers || 0} Printers</div>
+                    </div>
+                    <div className="flex items-center gap-2.5 min-w-[100px]">
+                       <span className={`w-2.5 h-2.5 rounded-full ${scan.status === 'verified' ? 'bg-emerald-500' : 'bg-amber-400'}`} />
+                       <span className={`text-sm font-medium ${scan.status === 'verified' ? 'text-emerald-700' : 'text-amber-600'}`}>
+                         {scan.status.charAt(0).toUpperCase() + scan.status.slice(1)}
+                       </span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
