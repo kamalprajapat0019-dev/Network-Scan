@@ -586,17 +586,16 @@ function getLocalNetworkInfo() {
     }
   }
   
-  if (validNetworks.length === 0) return null;
+  if (validNetworks.length === 0) return [];
   
-  // Prioritize Ethernet/LAN connections if multiple interfaces exist
-  const ethernetInterface = validNetworks.find(net => 
-    net.interfaceName.toLowerCase().includes('eth') || 
-    net.interfaceName.toLowerCase().includes('lan') ||
-    net.interfaceName.toLowerCase().includes('en')
-  );
-  
-  // Return Ethernet if found, otherwise return the first available (e.g. Wi-Fi)
-  return ethernetInterface ? ethernetInterface : validNetworks[0];
+  // Return all valid networks, sorting Ethernet first if possible
+  return validNetworks.sort((a, b) => {
+    const aIsEth = a.interfaceName.toLowerCase().includes('eth') || a.interfaceName.toLowerCase().includes('lan') || a.interfaceName.toLowerCase().includes('en');
+    const bIsEth = b.interfaceName.toLowerCase().includes('eth') || b.interfaceName.toLowerCase().includes('lan') || b.interfaceName.toLowerCase().includes('en');
+    if (aIsEth && !bIsEth) return -1;
+    if (!aIsEth && bIsEth) return 1;
+    return 0;
+  });
 }
 
 // Get ARP table to map IP to MAC addresses
@@ -793,9 +792,13 @@ function printProgress(current, total, label = '') {
 
 // ==================== MAIN SCANNER ====================
 
-async function scanNetwork(onProgress) {
+async function scanNetwork(networkInfo, onProgress) {
   const startTime = Date.now()
-  const networkInfo = getLocalNetworkInfo()
+  
+  if (!networkInfo) {
+    const networks = getLocalNetworkInfo()
+    networkInfo = networks && networks.length > 0 ? networks[0] : null
+  }
   
   if (!networkInfo) {
     throw new Error('Could not detect local network. Please check network connection.')
@@ -1350,8 +1353,30 @@ async function main() {
   }
   
   try {
+    // Select network interface
+    const networks = getLocalNetworkInfo()
+    if (!networks || networks.length === 0) {
+      console.log('\nNo active private network connections found. Please connect to a network.')
+      process.exit(1)
+    }
+    
+    let selectedNetwork = networks[0]
+    if (networks.length > 1) {
+      console.log('\nMultiple network interfaces detected:')
+      networks.forEach((net, index) => {
+        console.log(`  ${index + 1}. ${net.interfaceName.padEnd(20)} IP: ${net.localIP.padEnd(15)} (Subnet: ${net.subnet}.0/24)`)
+      })
+      
+      const selection = await prompt(`\nSelect network to scan [1-${networks.length}] (Default: 1): `)
+      const index = parseInt(selection) - 1
+      if (!isNaN(index) && index >= 0 && index < networks.length) {
+        selectedNetwork = networks[index]
+      }
+      console.log(`\nSelected: ${selectedNetwork.interfaceName} (${selectedNetwork.localIP})`)
+    }
+
     // Run scan
-    const scanResult = await scanNetwork()
+    const scanResult = await scanNetwork(selectedNetwork)
     
     // Print results
     console.log('\n╔════════════════════════════════════════════════════════════╗')

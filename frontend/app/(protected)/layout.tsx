@@ -73,7 +73,7 @@ export default function ProtectedLayout({
   return (
     <div className="flex min-h-screen bg-slate-50/50">
       {/* Sidebar (Desktop) */}
-      <aside className="hidden md:flex w-64 flex-col bg-white border-r">
+      <aside className="hidden md:flex w-64 flex-col bg-white border-r sticky top-0 h-screen overflow-y-auto">
         <div className="h-16 flex items-center px-6 border-b">
           <Link href="/dashboard" className="flex gap-2 items-center text-primary">
             <img src="/logo.png" alt="Audit Portal Logo" className="h-8 w-auto object-contain" />
