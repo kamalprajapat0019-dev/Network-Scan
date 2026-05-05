@@ -26,7 +26,10 @@ import {
   CheckCircle2,
   Clock,
   AlertTriangle,
+  Eye,
 } from "lucide-react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 interface NetworkScan {
   _id: string
@@ -42,12 +45,15 @@ interface NetworkScan {
     totalDevices: number
     localIP: string
     subnet: string
-    scannedAt: string
+    scanDuration?: number
     deviceBreakdown?: {
       pcs: number
       printers: number
+      cameras?: number
+      networkDevices?: number
       unknown: number
     }
+    devices?: any[]
   }
   scannedBy: string
   scannedAt: Date
@@ -247,7 +253,7 @@ export default function NetworkScansPage() {
             </TableHeader>
             <TableBody>
               {filteredScans.map((scan) => (
-                <TableRow key={scan._id} className="hover:bg-slate-50">
+                <TableRow key={scan.id || scan.scanId || scan._id} className="hover:bg-slate-50">
                   <TableCell className="font-medium">{scan.auditorName}</TableCell>
                   <TableCell className="font-mono text-sm">{scan.centerCode}</TableCell>
                   <TableCell className="font-medium">{scan.centerName}</TableCell>
@@ -267,8 +273,17 @@ export default function NetworkScansPage() {
                   </TableCell>
                   <TableCell>{getStatusBadge(scan.status)}</TableCell>
                   <TableCell className="text-sm whitespace-nowrap">
-                    {new Date(scan.scannedAt).toLocaleDateString()} <br />
-                    {new Date(scan.scannedAt).toLocaleTimeString()}
+                    <div className="flex items-center gap-3">
+                      <div>
+                        {new Date(scan.scannedAt).toLocaleDateString()} <br />
+                        {new Date(scan.scannedAt).toLocaleTimeString()}
+                      </div>
+                      <Link href={`/network-scans/${scan.id || scan.scanId || scan._id}`}>
+                        <Button variant="ghost" size="icon" title="View Details">
+                          <Eye className="h-4 w-4 text-blue-600" />
+                        </Button>
+                      </Link>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

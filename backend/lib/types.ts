@@ -27,6 +27,15 @@ export interface ExamCenter {
   updatedAt: Date
 }
 
+export interface DeviceInfo {
+  ip: string
+  mac: string
+  hostname: string
+  vendor: string
+  type: "pc" | "printer" | "camera" | "network" | "unknown"
+  ports?: number[]
+}
+
 export interface AuditRecord {
   _id?: ObjectId
   centerId: string
@@ -112,16 +121,20 @@ export interface NetworkScan {
   systemCount: number
   systemsDetected?: number
   ipList: string[]
+  devices?: DeviceInfo[]
   scanDetails?: {
     totalDevices: number
     localIP: string
     subnet: string
-    scannedAt: string
+    scanDuration?: number
     deviceBreakdown?: {
       pcs: number
       printers: number
+      cameras?: number
+      networkDevices?: number
       unknown: number
     }
+    devices?: DeviceInfo[]
   }
   scannedBy: string
   scannedAt: Date

@@ -224,23 +224,32 @@ const EXCLUDED_VENDORS = {
   '10:0C:6B': 'Netgear', '20:4E:7F': 'Netgear', '28:C6:8E': 'Netgear',
   '2C:B0:5D': 'Netgear', '30:46:9A': 'Netgear', '44:94:FC': 'Netgear',
   
-  // IP Cameras
+  // Hikvision
   '00:0F:7C': 'Hikvision', '00:1A:FA': 'Hikvision', '00:3C:1F': 'Hikvision',
-  '18:68:CB': 'Hikvision', '28:57:BE': 'Hikvision', '2C:51:9B': 'Hikvision',
-  '38:D5:47': 'Hikvision', '44:19:B6': 'Hikvision', '4C:BD:8F': 'Hikvision',
+  '18:68:CB': 'Hikvision', '24:0F:9B': 'Hikvision', '28:57:BE': 'Hikvision',
+  '2C:51:9B': 'Hikvision', '2C:D1:41': 'Hikvision', '38:D5:47': 'Hikvision',
+  '40:1E:17': 'Hikvision', '44:19:B6': 'Hikvision', '4C:BD:8F': 'Hikvision',
   '54:C4:15': 'Hikvision', '58:03:FB': 'Hikvision', '5C:F9:6A': 'Hikvision',
-  '64:00:F1': 'Hikvision', '68:CB:6A': 'Hikvision', '7C:08:D9': 'Hikvision',
-  '80:08:B0': 'Hikvision', '84:B8:B8': 'Hikvision', '8C:E1:17': 'Hikvision',
-  'A4:16:E7': 'Hikvision', 'B4:A3:82': 'Hikvision', 'BC:AD:28': 'Hikvision',
-  'C0:56:27': 'Hikvision', 'C4:2F:90': 'Hikvision', 'D4:28:B2': 'Hikvision',
-  'DC:02:8E': 'Hikvision', 'E0:50:8B': 'Hikvision', 'EC:8E:B5': 'Hikvision',
-  'F0:2F:4B': 'Hikvision', 'F8:A0:97': 'Hikvision',
+  '64:00:F1': 'Hikvision', '68:6B:29': 'Hikvision', '68:CB:6A': 'Hikvision',
+  '70:AF:25': 'Hikvision', '74:E1:82': 'Hikvision', '78:6B:28': 'Hikvision',
+  '7C:08:D9': 'Hikvision', '80:08:B0': 'Hikvision', '84:95:6F': 'Hikvision',
+  '84:B8:B8': 'Hikvision', '8C:E1:17': 'Hikvision', 'A4:14:37': 'Hikvision',
+  'A4:16:E7': 'Hikvision', 'A8:03:2A': 'Hikvision', 'B4:A3:82': 'Hikvision',
+  'BC:AD:28': 'Hikvision', 'C0:56:27': 'Hikvision', 'C4:2F:90': 'Hikvision',
+  'D4:28:B2': 'Hikvision', 'DC:02:8E': 'Hikvision', 'E0:50:8B': 'Hikvision',
+  'EC:8E:B5': 'Hikvision', 'F0:11:43': 'Hikvision', 'F0:2F:4B': 'Hikvision',
+  'F8:24:41': 'Hikvision', 'F8:A0:97': 'Hikvision',
   
-  // Dahua cameras
+  // Dahua
   '00:19:4D': 'Dahua', '3C:EF:8C': 'Dahua', '48:2A:E3': 'Dahua',
   '4C:11:BF': 'Dahua', '54:2A:9C': 'Dahua', '90:02:A9': 'Dahua',
   'B8:A3:86': 'Dahua', 'C8:42:05': 'Dahua', 'D0:E4:43': 'Dahua',
   'D4:43:0E': 'Dahua', 'E0:50:8B': 'Dahua',
+  
+  // CP PLUS
+  '24:52:6A': 'CP PLUS', '34:A3:95': 'CP PLUS', '54:A1:73': 'CP PLUS',
+  'B4:B5:2F': 'CP PLUS', 'A4:BA:DB': 'CP PLUS',
+
 }
 
 // ==================== LOGGER ====================
@@ -916,7 +925,7 @@ async function scanNetwork(networkInfo, onProgress) {
       confidence = 'high'
     } else {
       // Port-based detection for unknown vendors
-      const [winRPC, netbios, smb, rdp, ssh, printer9100, printerLPD] = await Promise.all([
+      const [winRPC, netbios, smb, rdp, ssh, printer9100, printerLPD, rtsp, hik8000, dahua37777] = await Promise.all([
         checkPort(ip, 135),
         checkPort(ip, 139),
         checkPort(ip, 445),
@@ -924,11 +933,19 @@ async function scanNetwork(networkInfo, onProgress) {
         checkPort(ip, 22),
         checkPort(ip, 9100),
         checkPort(ip, 515),
+        checkPort(ip, 554),
+        checkPort(ip, 8000),
+        checkPort(ip, 37777),
       ])
       
       if (printer9100 || printerLPD) {
         deviceType = 'printer'
         confidence = 'medium'
+      } else if (rtsp || hik8000 || dahua37777) {
+        deviceType = 'camera'
+        confidence = 'medium'
+        if (hik8000) vendorInfo.vendor = 'Possible Hikvision'
+        if (dahua37777) vendorInfo.vendor = 'Possible Dahua'
       } else if (winRPC || smb || rdp) {
         deviceType = 'pc'
         confidence = 'medium'
@@ -1300,11 +1317,15 @@ async function main() {
   
   // Interactive mode
   if (!config.apiUrl) {
-    config.apiUrl = await prompt('Enter API URL (e.g., https://your-api.vercel.app): ')
+    const defaultUrl = 'http://localhost:3000'
+    const input = await prompt(`Enter API URL (Default: ${defaultUrl}): `)
+    config.apiUrl = input || defaultUrl
   }
   
   if (!config.token) {
-    config.token = await prompt('Enter JWT Token: ')
+    const defaultToken = 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiJzY2FubmVyIiwidXNlcm5hbWUiOiJzY2FubmVyLWRldmljZSIsInJvbGUiOiJhZG1pbiIsIm5hbWUiOiJTY2FubmVyIERldmljZSIsImlhdCI6MTc3Nzk2MTk0NywiZXhwIjoyMDkzNTM3OTQ3fQ.zWV0e4zWMGkPdO4kpRdmwOozAHs6Wsey-h_NnwG0Dt0'
+    const input = await prompt(`Enter JWT Token (Default: Signed System Token): `)
+    config.token = input || defaultToken
   }
   
   // Check connectivity first
@@ -1420,6 +1441,13 @@ async function main() {
       systemCount: scanResult.systemCount,
       ipList: scanResult.ipList,
       macList: scanResult.macList,
+      devices: scanResult.devices.map(d => ({
+        ip: d.ip,
+        mac: d.mac,
+        hostname: d.hostname || d.ip,
+        vendor: d.vendor,
+        type: d.type,
+      })),
       scanDetails: {
         totalDevices: scanResult.totalDevices,
         localIP: scanResult.networkInfo.localIP,
@@ -1433,13 +1461,6 @@ async function main() {
           networkDevices: scanResult.networkDevices.length,
           unknown: scanResult.unknown.length,
         },
-        devices: scanResult.devices.map(d => ({
-          ip: d.ip,
-          mac: d.mac,
-          vendor: d.vendor,
-          type: d.type,
-          confidence: d.confidence,
-        })),
       },
     }
     
