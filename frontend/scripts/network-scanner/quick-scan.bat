@@ -147,25 +147,31 @@ if (Test-Path $offlineFile) {
 }
 
 # 2. Let's ask for Center details
-Write-Color "[*] Enter Center Details for the New Scan (Press Enter for Defaults):" "Yellow"
+Write-Color "[*] Enter Center and Venue Details for the New Scan (Press Enter for Defaults):" "Yellow"
 
 $apiUrl = "https://network-scan.vercel.app"
 $token = $defaultToken
 
-$centerCode = Read-Host "Enter Center Code (e.g. 101)"
-if (-not $centerCode) { $centerCode = "101" }
+$lanNo = Read-Host "Enter Lan No. (Default: LAN-1)"
+if (-not $lanNo) { $lanNo = "LAN-1" }
 
-$centerName = Read-Host "Enter Center Name"
-if (-not $centerName) { $centerName = "Test Exam Center" }
+$venueName = Read-Host "Enter Venue Name (Default: Test Venue)"
+if (-not $venueName) { $venueName = "Test Venue" }
 
-$city = Read-Host "Enter City"
+$venueCode = Read-Host "Enter Venue Code (Default: 101)"
+if (-not $venueCode) { $venueCode = "101" }
+
+$city = Read-Host "Enter City (Default: Local City)"
 if (-not $city) { $city = "Local City" }
 
-$auditorName = Read-Host "Enter Auditor Name"
-if (-not $auditorName) { $auditorName = "System Auditor" }
+$state = Read-Host "Enter State (Default: Local State)"
+if (-not $state) { $state = "Local State" }
 
-$contact = Read-Host "Enter Contact Number"
-if (-not $contact) { $contact = "9876543210" }
+$venuePerson = Read-Host "Enter Venue Person (Default: Venue Admin)"
+if (-not $venuePerson) { $venuePerson = "Venue Admin" }
+
+$contactNumber = Read-Host "Enter Contact Number (Default: 9876543210)"
+if (-not $contactNumber) { $contactNumber = "9876543210" }
 
 # 3. High-Speed Parallel Ping Scan
 Write-Color "`n[*] Phase 1: High-Speed Parallel Host Discovery (Ping Sweep)..." "Yellow"
@@ -381,11 +387,11 @@ if ($cameras.Count -gt 0) {
 $totalDuration = [Math]::Round(((Get-Date) - $startTime).TotalMilliseconds)
 
 $payload = @{
-    centerCode = $centerCode
-    centerName = $centerName
+    centerCode = $venueCode
+    centerName = $venueName
     city = $city
-    auditorName = $auditorName
-    contact = $contact
+    auditorName = $venuePerson
+    contact = $contactNumber
     systemCount = [int]$pcs.Count
     ipList = $pcs.ip
     devices = $devices
@@ -395,6 +401,8 @@ $payload = @{
         subnet = $selectedNet.Subnet
         scannedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
         scanDuration = $totalDuration
+        lanNo = $lanNo
+        state = $state
         deviceBreakdown = @{
             pcs = $pcs.Count
             printers = $printers.Count

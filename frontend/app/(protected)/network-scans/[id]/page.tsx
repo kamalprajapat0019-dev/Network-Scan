@@ -150,16 +150,16 @@ export default function ScanDetailsPage() {
       <div className="grid gap-6 md:grid-cols-3">
         <Card className="md:col-span-1 border-t-4 border-t-blue-600">
           <CardHeader>
-            <CardTitle className="text-lg">Center Info</CardTitle>
-            <CardDescription>Location and Auditor details</CardDescription>
+            <CardTitle className="text-lg">Venue Info</CardTitle>
+            <CardDescription>Location and Venue details</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1">
-              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Auditor</p>
+              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Venue Person</p>
               <p className="font-medium text-lg">{scan.auditorName}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Center Code & Name</p>
+              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Venue Code & Name</p>
               <p className="font-medium">{scan.centerCode} - {scan.centerName}</p>
             </div>
             <div className="space-y-1">
@@ -167,7 +167,15 @@ export default function ScanDetailsPage() {
               <p className="font-medium">{scan.city}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Contact</p>
+              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">State</p>
+              <p className="font-medium">{scan.scanDetails?.state || "N/A"}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Lan No.</p>
+              <p className="font-medium font-mono">{scan.scanDetails?.lanNo || "N/A"}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Contact Number</p>
               <p className="font-medium">{scan.contact}</p>
             </div>
           </CardContent>

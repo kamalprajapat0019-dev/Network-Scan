@@ -127,6 +127,8 @@ export interface NetworkScan {
     localIP: string
     subnet: string
     scanDuration?: number
+    lanNo?: string
+    state?: string
     deviceBreakdown?: {
       pcs: number
       printers: number

@@ -238,10 +238,12 @@ export default function NetworkScansPage() {
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50">
-                <TableHead className="font-bold">Auditor Name</TableHead>
-                <TableHead className="font-bold">Center Code</TableHead>
-                <TableHead className="font-bold">Center Name</TableHead>
+                <TableHead className="font-bold">Venue Person</TableHead>
+                <TableHead className="font-bold">Venue Code</TableHead>
+                <TableHead className="font-bold">Venue Name</TableHead>
                 <TableHead className="font-bold">City</TableHead>
+                <TableHead className="font-bold">State</TableHead>
+                <TableHead className="font-bold">Lan No.</TableHead>
                 <TableHead className="font-bold">Total Systems</TableHead>
                 <TableHead className="font-bold">PCs</TableHead>
                 <TableHead className="font-bold">Printers</TableHead>
@@ -258,6 +260,8 @@ export default function NetworkScansPage() {
                   <TableCell className="font-mono text-sm">{scan.centerCode}</TableCell>
                   <TableCell className="font-medium">{scan.centerName}</TableCell>
                   <TableCell>{scan.city}</TableCell>
+                  <TableCell>{scan.scanDetails?.state || "N/A"}</TableCell>
+                  <TableCell className="font-mono text-sm">{scan.scanDetails?.lanNo || "N/A"}</TableCell>
                   <TableCell className="text-center font-bold text-blue-600">{scan.systemCount}</TableCell>
                   <TableCell className="text-center font-bold text-green-600">
                     {scan.scanDetails?.deviceBreakdown?.pcs || 0}
