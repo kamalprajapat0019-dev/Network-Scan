@@ -159,8 +159,12 @@ export default function ScanDetailsPage() {
               <p className="font-medium text-lg">{scan.auditorName}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Venue Code & Name</p>
-              <p className="font-medium">{scan.centerCode} - {scan.centerName}</p>
+              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Venue Code</p>
+              <p className="font-medium font-mono">{scan.centerCode}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Venue Name</p>
+              <p className="font-medium">{scan.centerName}</p>
             </div>
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">City</p>
