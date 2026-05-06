@@ -4,6 +4,26 @@ import { query as mysqlQuery, initializeDatabase } from "@/lib/mysql"
 import { requireApiAuth, requireAuth } from "@/lib/auth"
 import { ObjectId } from "mongodb"
 
+const formatToISTResponse = (dateVal: any) => {
+  if (!dateVal) return dateVal
+  if (dateVal instanceof Date) {
+    return dateVal.toISOString().replace('Z', '+05:30')
+  }
+  if (typeof dateVal === 'string') {
+    if (dateVal.endsWith('Z')) {
+      return dateVal.replace('Z', '+05:30')
+    }
+    try {
+      const d = new Date(dateVal)
+      if (!isNaN(d.getTime())) {
+        return d.toISOString().replace('Z', '+05:30')
+      }
+    } catch {}
+  }
+  return dateVal
+}
+
+
 // Interface for network scan data
 interface NetworkScanData {
   centerCode: string
@@ -94,7 +114,12 @@ export async function POST(request: NextRequest) {
     
     // Generate scan ID
     const scanId = `SCAN-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`
-    const scannedAt = new Date()
+    
+    // Convert current server time (UTC) to Indian Standard Time (IST = UTC + 5:30) for MySQL DB storage
+    const serverTime = new Date()
+    const istOffset = 5.5 * 60 * 60 * 1000
+    const istTime = new Date(serverTime.getTime() + istOffset)
+    const scannedAt = istTime.toISOString().replace('T', ' ').substring(0, 19)
     
     // Create MySQL query
     const tableName = process.env.MYSQL_TABLE || 'Audit_Scanner'
@@ -217,7 +242,7 @@ export async function GET(request: NextRequest) {
         centerCode: scan.center_code?.toString(),
         centerName: scan.center_name,
         systemCount: scan.total_systems,
-        scannedAt: scan.scanned_at,
+        scannedAt: formatToISTResponse(scan.scanned_at),
         // Parse JSON fields
         ipList: typeof scan.ipList === 'string' ? JSON.parse(scan.ipList) : (scan.ipList || []),
         devices: typeof scan.devices === 'string' ? JSON.parse(scan.devices) : (scan.devices || []),
@@ -247,7 +272,7 @@ export async function GET(request: NextRequest) {
       centerCode: scan.center_code?.toString(),
       centerName: scan.center_name,
       systemCount: scan.total_systems,
-      scannedAt: scan.scanned_at,
+      scannedAt: formatToISTResponse(scan.scanned_at),
       ipList: typeof scan.ipList === 'string' ? JSON.parse(scan.ipList) : (scan.ipList || []),
       devices: typeof scan.devices === 'string' ? JSON.parse(scan.devices) : (scan.devices || []),
       scanDetails: typeof scan.scanDetails === 'string' ? JSON.parse(scan.scanDetails) : (scan.scanDetails || {})

@@ -2,6 +2,25 @@ import { NextRequest, NextResponse } from "next/server"
 import { query as mysqlQuery } from "@/lib/mysql"
 import { requireAuth } from "@/lib/auth"
 
+const formatToISTResponse = (dateVal: any) => {
+  if (!dateVal) return dateVal
+  if (dateVal instanceof Date) {
+    return dateVal.toISOString().replace('Z', '+05:30')
+  }
+  if (typeof dateVal === 'string') {
+    if (dateVal.endsWith('Z')) {
+      return dateVal.replace('Z', '+05:30')
+    }
+    try {
+      const d = new Date(dateVal)
+      if (!isNaN(d.getTime())) {
+        return d.toISOString().replace('Z', '+05:30')
+      }
+    } catch {}
+  }
+  return dateVal
+}
+
 export async function GET(request: NextRequest) {
   try {
     await requireAuth()
@@ -32,7 +51,7 @@ export async function GET(request: NextRequest) {
       centerCode: scan.center_code?.toString(),
       centerName: scan.center_name,
       systemCount: scan.total_systems,
-      scannedAt: scan.scanned_at,
+      scannedAt: formatToISTResponse(scan.scanned_at),
       // Parse JSON fields
       ipList: typeof scan.ipList === 'string' ? JSON.parse(scan.ipList) : (scan.ipList || []),
       devices: typeof scan.devices === 'string' ? JSON.parse(scan.devices) : (scan.devices || []),
