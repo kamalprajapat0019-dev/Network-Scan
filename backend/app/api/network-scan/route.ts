@@ -195,7 +195,7 @@ export async function GET(request: NextRequest) {
     const id = searchParams.get("id")
     console.log("📝 Query ID:", id)
     const centerCode = searchParams.get("centerCode")
-    const limit = parseInt(searchParams.get("limit") || "10")
+    const limit = parseInt(searchParams.get("limit") || "1000")
     
     const tableName = process.env.MYSQL_TABLE || 'Audit_Scanner'
     
