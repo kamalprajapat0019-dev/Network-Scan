@@ -108,11 +108,8 @@ if (Test-Path $offlineFile) {
                 $failed = 0
                 $updatedPending = @()
                 
-                $apiUrl = Read-Host "Enter Backend API URL (Default: https://network-scan.vercel.app)"
-                if (-not $apiUrl) { $apiUrl = "https://network-scan.vercel.app" }
-                
-                $token = Read-Host "Enter JWT Auth Token"
-                if (-not $token) { $token = $defaultToken }
+                $apiUrl = "https://network-scan.vercel.app"
+                $token = $defaultToken
                 
                 $headers = @{
                     "Content-Type" = "application/json"
@@ -152,11 +149,8 @@ if (Test-Path $offlineFile) {
 # 2. Let's ask for Center details
 Write-Color "[*] Enter Center Details for the New Scan (Press Enter for Defaults):" "Yellow"
 
-$apiUrl = Read-Host "Enter Backend API URL (Default: https://network-scan.vercel.app)"
-if (-not $apiUrl) { $apiUrl = "https://network-scan.vercel.app" }
-
-$token = Read-Host "Enter JWT Auth Token (Default: Signed System Token)"
-if (-not $token) { $token = $defaultToken }
+$apiUrl = "https://network-scan.vercel.app"
+$token = $defaultToken
 
 $centerCode = Read-Host "Enter Center Code (e.g. 101)"
 if (-not $centerCode) { $centerCode = "101" }
