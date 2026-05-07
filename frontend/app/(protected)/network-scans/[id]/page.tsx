@@ -124,213 +124,236 @@ export default function ScanDetailsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 max-w-7xl mx-auto px-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white rounded-lg border p-6 shadow-sm">
         <div className="flex items-center gap-4">
-          <Button onClick={() => router.back()} variant="ghost" size="icon">
+          <Button onClick={() => router.back()} variant="ghost" size="icon" className="shrink-0">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Scan Details</h1>
-            <p className="text-sm text-slate-500">
-              Scan ID: {scan?.scanId || id}
+            <h1 className="text-2xl font-bold tracking-tight">Network Scan Details</h1>
+            <p className="text-sm text-slate-500 mt-1">
+              Scan ID: <span className="font-mono font-medium">{scan?.scanId || id}</span>
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Badge variant="outline" className="bg-white/50">
-            {scan?.scannedAt ? new Date(scan.scannedAt).toLocaleString() : "Date N/A"}
-          </Badge>
-          <Badge className={scan?.status === "verified" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}>
-            {scan.status || "Unknown"}
-          </Badge>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-slate-600">
+            <Clock className="h-4 w-4" />
+            <span>{scan?.scannedAt ? new Date(scan.scannedAt).toLocaleString() : "Date N/A"}</span>
+          </div>
+          {getStatusBadge(scan?.status || "unknown")}
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card className="md:col-span-1 border-t-4 border-t-blue-600">
-          <CardHeader>
-            <CardTitle className="text-lg">Venue Info</CardTitle>
+      <div className="grid gap-4 lg:grid-cols-3 md:grid-cols-2 grid-cols-1">
+        <Card className="border-t-4 border-t-blue-600">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Globe className="h-5 w-5 text-blue-600" />
+              Venue Info
+            </CardTitle>
             <CardDescription>Location and Venue details</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Venue Person</p>
-              <p className="font-medium text-lg">{scan.auditorName}</p>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider mb-1">Venue Person</p>
+                <p className="font-medium text-sm">{scan.auditorName}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider mb-1">Venue Code</p>
+                <p className="font-medium font-mono text-sm">{scan.centerCode}</p>
+              </div>
             </div>
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Venue Code</p>
-              <p className="font-medium font-mono">{scan.centerCode}</p>
+            <div>
+              <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider mb-1">Venue Name</p>
+              <p className="font-medium text-sm">{scan.centerName}</p>
             </div>
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Venue Name</p>
-              <p className="font-medium">{scan.centerName}</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider mb-1">City</p>
+                <p className="font-medium text-sm">{scan.city}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider mb-1">State</p>
+                <p className="font-medium text-sm">{scan.scanDetails?.state || "N/A"}</p>
+              </div>
             </div>
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">City</p>
-              <p className="font-medium">{scan.city}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">State</p>
-              <p className="font-medium">{scan.scanDetails?.state || "N/A"}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Lan No.</p>
-              <p className="font-medium font-mono">{scan.scanDetails?.lanNo || "N/A"}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Contact Number</p>
-              <p className="font-medium">{scan.contact}</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider mb-1">Lan No.</p>
+                <p className="font-medium font-mono text-sm">{scan.scanDetails?.lanNo || "N/A"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider mb-1">Contact</p>
+                <p className="font-medium text-sm">{scan.contact}</p>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-1 border-t-4 border-t-green-600">
-          <CardHeader>
-            <CardTitle className="text-lg">Network Info</CardTitle>
+        <Card className="border-t-4 border-t-green-600">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Network className="h-5 w-5 text-green-600" />
+              Network Info
+            </CardTitle>
             <CardDescription>Subnet and Interface details</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm">
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between py-2 px-3 bg-blue-50 rounded-lg">
+              <div className="flex items-center gap-2">
                 <Globe className="h-4 w-4 text-blue-500" />
-                <span>Local IP</span>
+                <span className="text-sm font-medium">Local IP</span>
               </div>
-              <span className="font-mono font-bold">{scan.scanDetails?.localIP || "N/A"}</span>
+              <span className="font-mono font-semibold text-blue-700">{scan.scanDetails?.localIP || "N/A"}</span>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center justify-between py-2 px-3 bg-green-50 rounded-lg">
+              <div className="flex items-center gap-2">
                 <Network className="h-4 w-4 text-green-500" />
-                <span>Subnet</span>
+                <span className="text-sm font-medium">Subnet</span>
               </div>
-              <span className="font-mono font-bold">{scan.scanDetails?.subnet || "N/A"}.0/24</span>
+              <span className="font-mono font-semibold text-green-700">{scan.scanDetails?.subnet || "N/A"}.0/24</span>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center justify-between py-2 px-3 bg-orange-50 rounded-lg">
+              <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-orange-500" />
-                <span>Duration</span>
+                <span className="text-sm font-medium">Duration</span>
               </div>
-              <span className="font-bold">
+              <span className="font-semibold text-orange-700">
                 {scan.scanDetails?.scanDuration ? `${Number(scan.scanDetails.scanDuration).toFixed(2)}s` : "N/A"}
               </span>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center justify-between py-2 px-3 bg-purple-50 rounded-lg">
+              <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-purple-500" />
-                <span>Total Devices</span>
+                <span className="text-sm font-medium">Total Devices</span>
               </div>
-              <span className="text-xl font-bold">{scan.scanDetails?.totalDevices || scan.systemCount}</span>
+              <span className="text-lg font-bold text-purple-700">{scan.scanDetails?.totalDevices || scan.systemCount}</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-1 border-t-4 border-t-purple-600">
-          <CardHeader>
-            <CardTitle className="text-lg">Breakdown</CardTitle>
+        <Card className="border-t-4 border-t-purple-600 lg:col-span-1 md:col-span-2">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Shield className="h-5 w-5 text-purple-600" />
+              Device Breakdown
+            </CardTitle>
             <CardDescription>Device types detected</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
-              <div className="flex items-center gap-2 text-sm font-medium text-blue-700">
-                <Monitor className="h-4 w-4" />
-                <span>PCs</span>
+          <CardContent className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Monitor className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-700">PCs</span>
+                </div>
+                <span className="font-bold text-blue-800">{scan.scanDetails?.deviceBreakdown?.pcs || 0}</span>
               </div>
-              <span className="font-bold text-blue-800">{scan.scanDetails?.deviceBreakdown?.pcs || 0}</span>
-            </div>
-            <div className="flex items-center justify-between p-2 bg-orange-50 rounded-lg">
-              <div className="flex items-center gap-2 text-sm font-medium text-orange-700">
-                <Printer className="h-4 w-4" />
-                <span>Printers</span>
+              <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Printer className="h-4 w-4 text-orange-600" />
+                  <span className="text-sm font-medium text-orange-700">Printers</span>
+                </div>
+                <span className="font-bold text-orange-800">{scan.scanDetails?.deviceBreakdown?.printers || 0}</span>
               </div>
-              <span className="font-bold text-orange-800">{scan.scanDetails?.deviceBreakdown?.printers || 0}</span>
-            </div>
-            <div className="flex items-center justify-between p-2 bg-purple-50 rounded-lg">
-              <div className="flex items-center gap-2 text-sm font-medium text-purple-700">
-                <Camera className="h-4 w-4" />
-                <span>Cameras</span>
+              <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Camera className="h-4 w-4 text-purple-600" />
+                  <span className="text-sm font-medium text-purple-700">Cameras</span>
+                </div>
+                <span className="font-bold text-purple-800">{scan.scanDetails?.deviceBreakdown?.cameras || 0}</span>
               </div>
-              <span className="font-bold text-purple-800">{scan.scanDetails?.deviceBreakdown?.cameras || 0}</span>
-            </div>
-            <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
-              <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                <Search className="h-4 w-4" />
-                <span>Unknown</span>
+              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Search className="h-4 w-4 text-slate-600" />
+                  <span className="text-sm font-medium text-slate-700">Unknown</span>
+                </div>
+                <span className="font-bold text-slate-800">{scan.scanDetails?.deviceBreakdown?.unknown || 0}</span>
               </div>
-              <span className="font-bold text-slate-800">{scan.scanDetails?.deviceBreakdown?.unknown || 0}</span>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader className="border-b">
-          <div className="flex items-center justify-between">
+      <Card className="shadow-sm">
+        <CardHeader className="border-b bg-slate-50/50">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <CardTitle>Discovered Devices</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Network className="h-5 w-5 text-slate-600" />
+                Discovered Devices
+              </CardTitle>
               <CardDescription>Full inventory of all active hosts on the network</CardDescription>
             </div>
-            <Badge variant="secondary" className="px-3 py-1">
+            <Badge variant="secondary" className="px-3 py-1 self-start">
               {devicesList.length} Active Devices
             </Badge>
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-slate-50">
-                <TableHead className="w-[100px] text-center">Type</TableHead>
-                <TableHead>IP Address</TableHead>
-                <TableHead>MAC Address</TableHead>
-                <TableHead>Hostname / Name</TableHead>
-                <TableHead>Manufacturer / Vendor</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {devicesList.length > 0 ? (
-                devicesList.map((device: any, idx: number) => (
-                  <TableRow key={idx} className="hover:bg-slate-50 transition-colors">
-                    <TableCell className="text-center">
-                      <div className="flex justify-center">
-                        {getDeviceIcon(device.type)}
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-50 hover:bg-slate-50">
+                  <TableHead className="w-[80px] text-center font-semibold">Type</TableHead>
+                  <TableHead className="font-semibold min-w-[120px]">IP Address</TableHead>
+                  <TableHead className="font-semibold min-w-[140px]">MAC Address</TableHead>
+                  <TableHead className="font-semibold min-w-[150px]">Hostname / Name</TableHead>
+                  <TableHead className="font-semibold min-w-[120px]">Manufacturer</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {devicesList.length > 0 ? (
+                  devicesList.map((device: any, idx: number) => (
+                    <TableRow key={idx} className="hover:bg-slate-50/50 transition-colors">
+                      <TableCell className="text-center">
+                        <div className="flex justify-center">
+                          {getDeviceIcon(device.type)}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-mono font-semibold text-blue-600">
+                        {device.ip}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm text-slate-600">
+                        {device.mac === "Unknown" ? (
+                          <span className="text-slate-400 italic">Not detected</span>
+                        ) : (
+                          device.mac
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {device.hostname || "---"}
+                      </TableCell>
+                      <TableCell>
+                        {device.vendor === "Unknown" ? (
+                          <span className="text-slate-400 italic">Unknown Vendor</span>
+                        ) : (
+                          <Badge variant="outline" className="font-normal border-slate-200 bg-slate-50">
+                            {device.vendor}
+                          </Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-48 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-3 py-8">
+                        <Network className="h-12 w-12 text-slate-300" />
+                        <div className="text-center">
+                          <p className="text-slate-500 font-medium mb-1">No detailed device data available</p>
+                          <p className="text-xs text-slate-400">Detailed data is only available for scans performed after the system update.</p>
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell className="font-mono font-bold text-blue-600">
-                      {device.ip}
-                    </TableCell>
-                    <TableCell className="font-mono text-sm text-slate-600">
-                      {device.mac === "Unknown" ? (
-                        <span className="text-slate-400 italic">Not detected</span>
-                      ) : (
-                        device.mac
-                      )}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {device.hostname || "---"}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {device.vendor === "Unknown" ? (
-                        <span className="text-slate-400 italic">Unknown Vendor</span>
-                      ) : (
-                        <Badge variant="outline" className="font-normal border-slate-200">
-                          {device.vendor}
-                        </Badge>
-                      )}
-                    </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="h-48 text-center">
-                    <div className="flex flex-col items-center justify-center space-y-2">
-                      <Network className="h-10 w-10 text-slate-300" />
-                      <p className="text-slate-500 font-medium">No detailed device data available for this scan</p>
-                      <p className="text-xs text-slate-400">Detailed data is only available for scans performed after the system update.</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
