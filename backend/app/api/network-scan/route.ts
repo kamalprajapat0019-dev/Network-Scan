@@ -108,9 +108,31 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    
     // Initialize MySQL table if not exists
     await initializeDatabase()
+    
+    const tableName = process.env.MYSQL_TABLE || 'Audit_Scanner'
+    const centerCodeInt = parseInt(body.centerCode)
+    const auditorNameStr = body.auditorName || user.name
+    
+    // Check if scan limit of 5 is exceeded for this center code and venue person
+    const countQuery = `
+      SELECT COUNT(*) as count FROM \`${tableName}\` 
+      WHERE center_code = ? AND auditor_name = ?
+    `
+    const countRows = await mysqlQuery(countQuery, [centerCodeInt, auditorNameStr]) as any[]
+    const scanCount = countRows[0]?.count || 0
+    
+    if (scanCount >= 5) {
+      console.warn(`⚠️ Scan limit exceeded for center ${body.centerCode} and auditor ${auditorNameStr}`)
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Scan limit exceeded. Venue person '${auditorNameStr}' has already performed ${scanCount} scans for center ${body.centerCode}. Only 5 scans are allowed.` 
+        },
+        { status: 400 }
+      )
+    }
     
     // Generate scan ID
     const scanId = `SCAN-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`
@@ -122,7 +144,6 @@ export async function POST(request: NextRequest) {
     const scannedAt = istTime.toISOString().replace('T', ' ').substring(0, 19)
     
     // Create MySQL query
-    const tableName = process.env.MYSQL_TABLE || 'Audit_Scanner'
     const insertQuery = `
       INSERT INTO \`${tableName}\` 
       (scanId, auditor_name, center_code, center_name, city, contact, total_systems, pcs, printers, lan_subnet, local_ip, ipList, devices, scanDetails, scannedBy, scanned_at, status)
