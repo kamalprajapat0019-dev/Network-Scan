@@ -916,43 +916,59 @@ async function scanNetwork(networkInfo, onProgress) {
     let deviceType = 'unknown'
     let confidence = 'low'
     
-    if (vendorInfo.isExcluded) {
+    // Always perform fast parallel port-checks first to prevent multi-use vendors (like HP or Dell)
+    // from misclassifying printers as PCs due to MAC OUI overlap.
+    const [winRPC, netbios, smb, rdp, ssh, printer9100, printerLPD, rtsp, hik8000, dahua37777] = await Promise.all([
+      checkPort(ip, 135),
+      checkPort(ip, 139),
+      checkPort(ip, 445),
+      checkPort(ip, 3389),
+      checkPort(ip, 22),
+      checkPort(ip, 9100),
+      checkPort(ip, 515),
+      checkPort(ip, 554),
+      checkPort(ip, 8000),
+      checkPort(ip, 37777),
+    ])
+    
+    const isPrinterHost = displayName && displayName.toLowerCase().match(/printer|epson|canon|brother|xerox|lexmark|ricoh|kyocera|pantum|konica|minolta|fuji|oki|hp-laser/)
+
+    if (printer9100 || printerLPD || isPrinterHost) {
+      deviceType = 'printer'
+      confidence = 'high'
+      if (vendorInfo.vendor === 'Unknown' || vendorInfo.vendor === 'HP' || vendorInfo.vendor === 'Dell') {
+        if (isPrinterHost) {
+          if (displayName.toLowerCase().includes('epson')) vendorInfo.vendor = 'Epson'
+          else if (displayName.toLowerCase().includes('canon')) vendorInfo.vendor = 'Canon'
+          else if (displayName.toLowerCase().includes('brother')) vendorInfo.vendor = 'Brother'
+          else if (displayName.toLowerCase().includes('xerox')) vendorInfo.vendor = 'Xerox'
+          else if (displayName.toLowerCase().includes('lexmark')) vendorInfo.vendor = 'Lexmark'
+          else if (displayName.toLowerCase().includes('ricoh')) vendorInfo.vendor = 'Ricoh'
+          else if (displayName.toLowerCase().includes('kyocera')) vendorInfo.vendor = 'Kyocera'
+          else if (displayName.toLowerCase().includes('konica') || displayName.toLowerCase().includes('minolta')) vendorInfo.vendor = 'Konica Minolta'
+          else vendorInfo.vendor = 'Printer'
+        } else {
+          vendorInfo.vendor = vendorInfo.vendor === 'Unknown' ? 'Printer' : `${vendorInfo.vendor} Printer`
+        }
+      }
+    } else if (vendorInfo.isExcluded) {
       deviceType = vendorInfo.vendor.toLowerCase().includes('printer') ? 'printer' : 
                    vendorInfo.vendor.toLowerCase().includes('camera') || vendorInfo.vendor.toLowerCase().includes('hikvision') || vendorInfo.vendor.toLowerCase().includes('dahua') ? 'camera' : 'network-device'
       confidence = 'high'
+    } else if (rtsp || hik8000 || dahua37777) {
+      deviceType = 'camera'
+      confidence = 'medium'
+      if (hik8000) vendorInfo.vendor = 'Possible Hikvision'
+      if (dahua37777) vendorInfo.vendor = 'Possible Dahua'
     } else if (vendorInfo.isPC) {
       deviceType = 'pc'
       confidence = 'high'
-    } else {
-      // Port-based detection for unknown vendors
-      const [winRPC, netbios, smb, rdp, ssh, printer9100, printerLPD, rtsp, hik8000, dahua37777] = await Promise.all([
-        checkPort(ip, 135),
-        checkPort(ip, 139),
-        checkPort(ip, 445),
-        checkPort(ip, 3389),
-        checkPort(ip, 22),
-        checkPort(ip, 9100),
-        checkPort(ip, 515),
-        checkPort(ip, 554),
-        checkPort(ip, 8000),
-        checkPort(ip, 37777),
-      ])
-      
-      if (printer9100 || printerLPD) {
-        deviceType = 'printer'
-        confidence = 'medium'
-      } else if (rtsp || hik8000 || dahua37777) {
-        deviceType = 'camera'
-        confidence = 'medium'
-        if (hik8000) vendorInfo.vendor = 'Possible Hikvision'
-        if (dahua37777) vendorInfo.vendor = 'Possible Dahua'
-      } else if (winRPC || smb || rdp) {
-        deviceType = 'pc'
-        confidence = 'medium'
-      } else if (ssh) {
-        deviceType = 'possible-pc'
-        confidence = 'low'
-      }
+    } else if (winRPC || smb || rdp) {
+      deviceType = 'pc'
+      confidence = 'medium'
+    } else if (ssh) {
+      deviceType = 'possible-pc'
+      confidence = 'low'
     }
     
     const device = {

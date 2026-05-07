@@ -325,24 +325,52 @@ while ($keepScanning) {
                     $vendor = "IP Camera"
                 }
             } else {
-                # 4. Check if it's a PC (135, 445, 3389, 22)
-                $isPC = $false
-                foreach ($p in @(135, 445, 3389, 22)) {
+                # 4. Check if it's a printer first (9100 RAW, 515 LPD, 631 IPP)
+                $isPrinter = $false
+                foreach ($p in @(9100, 515, 631)) {
                     if (Test-Port -IP $ip -Port $p) {
-                        $isPC = $true
+                        $isPrinter = $true
                         break
                     }
                 }
                 
-                if ($isPC) {
-                    $deviceType = "pc"
+                # Check hostname for printer cues (e.g. Epson, Canon, Brother, HP LaserJet, Ricoh, etc.)
+                $isPrinterHost = $false
+                if ($hostname -match "printer|epson|canon|brother|xerox|lexmark|ricoh|kyocera|pantum|konica|minolta|fuji|oki|hp-laser") {
+                    $isPrinterHost = $true
+                }
+                
+                if ($isPrinter -or $isPrinterHost) {
+                    $deviceType = "printer"
+                    if ($vendor -eq "Unknown" -and $isPrinterHost) {
+                        if ($hostname -match "epson") { $vendor = "Epson" }
+                        elseif ($hostname -match "canon") { $vendor = "Canon" }
+                        elseif ($hostname -match "brother") { $vendor = "Brother" }
+                        elseif ($hostname -match "xerox") { $vendor = "Xerox" }
+                        elseif ($hostname -match "lexmark") { $vendor = "Lexmark" }
+                        elseif ($hostname -match "ricoh") { $vendor = "Ricoh" }
+                        elseif ($hostname -match "kyocera") { $vendor = "Kyocera" }
+                        elseif ($hostname -match "pantum") { $vendor = "Pantum" }
+                        elseif ($hostname -match "konica|minolta") { $vendor = "Konica Minolta" }
+                        else { $vendor = "Printer" }
+                    }
                 } else {
-                    # 5. Check if it's a printer (9100, 515)
-                    if (Test-Port -IP $ip -Port 9100 -or Test-Port -IP $ip -Port 515) {
-                        $deviceType = "printer"
-                    } # 6. Check if it's a router/network-device (80, 443)
-                    elseif (Test-Port -IP $ip -Port 80 -or Test-Port -IP $ip -Port 443) {
-                        $deviceType = "network-device"
+                    # 5. Check if it's a PC (135, 445, 3389, 22)
+                    $isPC = $false
+                    foreach ($p in @(135, 445, 3389, 22)) {
+                        if (Test-Port -IP $ip -Port $p) {
+                            $isPC = $true
+                            break
+                        }
+                    }
+                    
+                    if ($isPC) {
+                        $deviceType = "pc"
+                    } else {
+                        # 6. Check if it's a router/network-device (80, 443)
+                        if (Test-Port -IP $ip -Port 80 -or Test-Port -IP $ip -Port 443) {
+                            $deviceType = "network-device"
+                        }
                     }
                 }
             }
