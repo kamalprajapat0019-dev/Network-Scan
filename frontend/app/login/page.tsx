@@ -105,10 +105,10 @@ export default function LoginPage() {
             </FieldGroup>
           </form>
 
-          <div className="mt-6 text-center text-sm text-muted-foreground">
+          {/* <div className="mt-6 text-center text-sm text-muted-foreground">
             <p>Default admin credentials:</p>
             <p className="font-mono text-xs mt-1">Username: admin | Password: admin123</p>
-          </div>
+          </div> */}
         </CardContent>
       </Card>
     </div>
