@@ -27,6 +27,7 @@ import {
   CheckCircle2,
   Clock,
   AlertTriangle,
+  Download,
 } from "lucide-react"
 import Link from "next/link"
 import { DeviceInfo, NetworkScan } from "@/lib/types"
@@ -102,6 +103,47 @@ export default function ScanDetailsPage() {
   };
 
   const devicesList = getDevices();
+
+  const exportToCSV = () => {
+    if (!devicesList || devicesList.length === 0) return;
+    
+    // Header row
+    const headers = ["Type", "IP Address", "MAC Address", "Hostname / Name", "Manufacturer"]
+    
+    // Convert devices to rows, escaping CSV values to prevent formula injection
+    const escapeCSV = (val: string) => {
+      if (val === undefined || val === null) return "";
+      let escaped = val.toString().replace(/"/g, '""');
+      if (escaped.startsWith("=") || escaped.startsWith("+") || escaped.startsWith("-") || escaped.startsWith("@")) {
+        escaped = `'${escaped}`;
+      }
+      return `"${escaped}"`;
+    };
+
+    const rows = devicesList.map((device: any) => [
+      escapeCSV(device.type || "unknown"),
+      escapeCSV(device.ip || ""),
+      escapeCSV(device.mac || "Unknown"),
+      escapeCSV(device.hostname || "---"),
+      escapeCSV(device.vendor || "Unknown")
+    ]);
+    
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.join(","))
+    ].join("\n");
+    
+    // Create download link
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `network_devices_${scan?.scanId || id}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 
   if (isLoading) {
     return (
@@ -288,9 +330,22 @@ export default function ScanDetailsPage() {
               </CardTitle>
               <CardDescription>Full inventory of all active hosts on the network</CardDescription>
             </div>
-            <Badge variant="secondary" className="px-3 py-1 self-start">
-              {devicesList.length} Active Devices
-            </Badge>
+            <div className="flex items-center gap-3 self-start">
+              {devicesList.length > 0 && (
+                <Button
+                  onClick={exportToCSV}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 border-slate-200 hover:bg-slate-100 text-xs font-semibold h-9 px-3"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Export CSV
+                </Button>
+              )}
+              <Badge variant="secondary" className="px-3 py-1 h-9 flex items-center justify-center font-semibold text-xs">
+                {devicesList.length} Active Devices
+              </Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
