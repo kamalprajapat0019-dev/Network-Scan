@@ -1333,15 +1333,18 @@ async function main() {
   
   // Interactive mode
   if (!config.apiUrl) {
-    const defaultUrl = 'http://localhost:3000'
+    const defaultUrl = 'https://localhost:3000'
     const input = await prompt(`Enter API URL (Default: ${defaultUrl}): `)
     config.apiUrl = input || defaultUrl
   }
   
   if (!config.token) {
-    const defaultToken = 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiJzY2FubmVyIiwidXNlcm5hbWUiOiJzY2FubmVyLWRldmljZSIsInJvbGUiOiJhZG1pbiIsIm5hbWUiOiJTY2FubmVyIERldmljZSIsImlhdCI6MTc3Nzk2MTk0NywiZXhwIjoyMDkzNTM3OTQ3fQ.zWV0e4zWMGkPdO4kpRdmwOozAHs6Wsey-h_NnwG0Dt0'
-    const input = await prompt(`Enter JWT Token (Default: Signed System Token): `)
-    config.token = input || defaultToken
+    const input = await prompt(`Enter JWT Token or Scanner API Key: `)
+    config.token = input ? input.trim() : ''
+    if (!config.token) {
+      console.error('\n❌ Error: A valid JWT Token or Scanner API Key is required to submit scan results.')
+      process.exit(1)
+    }
   }
   
   // Check connectivity first

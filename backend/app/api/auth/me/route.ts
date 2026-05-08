@@ -18,9 +18,8 @@ export async function GET() {
     })
   } catch (error) {
     console.error("Auth check error:", error)
-    const errorMessage = error instanceof Error ? error.message : "Internal server error"
     return NextResponse.json(
-      { success: false, error: errorMessage },
+      { success: false, error: "Internal server error" },
       { status: 500 }
     )
   }

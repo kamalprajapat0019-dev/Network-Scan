@@ -55,16 +55,47 @@ export async function PUT(
     await requireAuth(["admin"])
     
     const { id } = await params
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid center ID format" },
+        { status: 400 }
+      )
+    }
+
     const body = await request.json()
     
     const db = await getDb()
     const centersCollection = db.collection<ExamCenter>("centers")
     
-    const updateData = {
-      ...body,
+    const {
+      centerId,
+      name,
+      address,
+      city,
+      state,
+      zone,
+      capacity,
+      contactPerson,
+      contactPhone,
+      contactEmail,
+      status
+    } = body
+
+    const updateData: Record<string, any> = {
       updatedAt: new Date(),
     }
-    delete updateData._id
+
+    if (centerId !== undefined) updateData.centerId = centerId
+    if (name !== undefined) updateData.name = name
+    if (address !== undefined) updateData.address = address
+    if (city !== undefined) updateData.city = city
+    if (state !== undefined) updateData.state = state
+    if (zone !== undefined) updateData.zone = zone
+    if (capacity !== undefined) updateData.capacity = capacity
+    if (contactPerson !== undefined) updateData.contactPerson = contactPerson
+    if (contactPhone !== undefined) updateData.contactPhone = contactPhone
+    if (contactEmail !== undefined) updateData.contactEmail = contactEmail
+    if (status !== undefined) updateData.status = status
     
     const result = await centersCollection.findOneAndUpdate(
       { _id: new ObjectId(id) },
@@ -103,6 +134,13 @@ export async function DELETE(
     await requireAuth(["admin"])
     
     const { id } = await params
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid center ID format" },
+        { status: 400 }
+      )
+    }
+
     const db = await getDb()
     const centersCollection = db.collection<ExamCenter>("centers")
     

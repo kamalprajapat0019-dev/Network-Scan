@@ -114,9 +114,18 @@ function convertToCSV(data: unknown[], type: string): string {
     ])
   }
   
+  const escapeCSVCell = (value: string): string => {
+    if (!value) return ""
+    let escaped = value.replace(/"/g, '""')
+    if (escaped.startsWith("=") || escaped.startsWith("+") || escaped.startsWith("-") || escaped.startsWith("@")) {
+      escaped = `'${escaped}`
+    }
+    return escaped
+  }
+  
   const csvContent = [
     headers.join(","),
-    ...rows.map((row) => row.map((cell) => `"${cell}"`).join(","))
+    ...rows.map((row) => row.map((cell) => `"${escapeCSVCell(cell)}"`).join(","))
   ].join("\n")
   
   return csvContent

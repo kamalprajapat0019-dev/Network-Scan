@@ -20,10 +20,11 @@ export async function GET(request: NextRequest) {
     const query: Record<string, unknown> = {}
     
     if (search) {
+      const escapedSearch = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&")
       query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { centerId: { $regex: search, $options: "i" } },
-        { city: { $regex: search, $options: "i" } },
+        { name: { $regex: escapedSearch, $options: "i" } },
+        { centerId: { $regex: escapedSearch, $options: "i" } },
+        { city: { $regex: escapedSearch, $options: "i" } },
       ]
     }
     

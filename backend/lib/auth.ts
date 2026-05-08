@@ -143,7 +143,8 @@ export async function initializeDefaultAdmin() {
   const existingAdmin = await usersCollection.findOne({ role: "admin" })
   
   if (!existingAdmin) {
-    const hashedPassword = await hashPassword("admin123")
+    const adminPassword = process.env.INITIAL_ADMIN_PASSWORD || "AdminSecuredDefaultPassword2026!"
+    const hashedPassword = await hashPassword(adminPassword)
     await usersCollection.insertOne({
       username: "admin",
       password: hashedPassword,
@@ -152,5 +153,6 @@ export async function initializeDefaultAdmin() {
       createdAt: new Date(),
       updatedAt: new Date(),
     })
+    console.log(`🔐 Default admin user created. Username: admin, Password source: ${process.env.INITIAL_ADMIN_PASSWORD ? "INITIAL_ADMIN_PASSWORD env" : "Secure fallback password"}`)
   }
 }
