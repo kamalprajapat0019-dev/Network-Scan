@@ -2,6 +2,7 @@ import { SignJWT, jwtVerify } from "jose"
 import { cookies } from "next/headers"
 import bcrypt from "bcryptjs"
 import { getDb } from "./mongodb"
+import { query as mysqlQuery, initializeDatabase } from "./mysql"
 import type { User } from "./types"
 
 const JWT_SECRET_KEY = process.env.JWT_SECRET
@@ -27,7 +28,7 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 export async function createToken(user: Omit<User, "password">): Promise<string> {
   validateJwtSecret()
   return new SignJWT({
-    userId: user._id?.toString(),
+    userId: user._id?.toString() || (user as any).id?.toString(),
     username: user.username,
     role: user.role,
     name: user.name,
@@ -137,22 +138,23 @@ export async function requireApiAuth(request: Request, allowedRoles?: ("admin" |
 }
 
 export async function initializeDefaultAdmin() {
-  const db = await getDb()
-  const usersCollection = db.collection<User>("users")
-  
-  const existingAdmin = await usersCollection.findOne({ role: "admin" })
-  
-  if (!existingAdmin) {
-    const adminPassword = process.env.INITIAL_ADMIN_PASSWORD || "AdminSecuredDefaultPassword2026!"
-    const hashedPassword = await hashPassword(adminPassword)
-    await usersCollection.insertOne({
-      username: "admin",
-      password: hashedPassword,
-      role: "admin",
-      name: "System Administrator",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
-    console.log(`🔐 Default admin user created. Username: admin, Password source: ${process.env.INITIAL_ADMIN_PASSWORD ? "INITIAL_ADMIN_PASSWORD env" : "Secure fallback password"}`)
+  try {
+    // Ensure database tables exist first
+    await initializeDatabase()
+    
+    const existingAdmins = await mysqlQuery(`SELECT id FROM \`users\` WHERE role = 'admin' LIMIT 1`) as any[]
+    
+    if (!existingAdmins || existingAdmins.length === 0) {
+      const adminPassword = process.env.INITIAL_ADMIN_PASSWORD || "AdminSecuredDefaultPassword2026!"
+      const hashedPassword = await hashPassword(adminPassword)
+      
+      await mysqlQuery(
+        `INSERT INTO \`users\` (username, password, role, name) VALUES (?, ?, ?, ?)`,
+        ["admin", hashedPassword, "admin", "System Administrator"]
+      )
+      console.log(`🔐 Default admin user created in MySQL. Username: admin`)
+    }
+  } catch (error) {
+    console.error("❌ Failed to initialize default admin in MySQL:", error)
   }
 }

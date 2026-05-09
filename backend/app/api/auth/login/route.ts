@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getDb } from "@/lib/mongodb"
 import { verifyPassword, createToken, initializeDefaultAdmin } from "@/lib/auth"
+import { query as mysqlQuery } from "@/lib/mysql"
 import type { User } from "@/lib/types"
 
 export async function POST(request: NextRequest) {
@@ -22,10 +22,8 @@ export async function POST(request: NextRequest) {
       // Continue even if initialization fails - user might exist
     }
     
-    const db = await getDb()
-    const usersCollection = db.collection<User>("users")
-    
-    const user = await usersCollection.findOne({ username })
+    const rows = await mysqlQuery(`SELECT * FROM \`users\` WHERE username = ? LIMIT 1`, [username]) as any[]
+    const user = rows?.[0]
     
     if (!user) {
       return NextResponse.json(
@@ -65,14 +63,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Internal server error"
     console.error("❌ Login error:", errorMessage)
-    
-    // Check if it's a MongoDB connection error
-    if (errorMessage.includes("MongoDB") || errorMessage.includes("mongodb")) {
-      return NextResponse.json(
-        { success: false, error: "Database connection failed. Please try again." },
-        { status: 503 }
-      )
-    }
     
     return NextResponse.json(
       { success: false, error: "Internal server error" },

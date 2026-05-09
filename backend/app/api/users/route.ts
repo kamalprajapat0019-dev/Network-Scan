@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getDb } from "@/lib/mongodb"
 import { requireAuth, hashPassword } from "@/lib/auth"
+import { query as mysqlQuery } from "@/lib/mysql"
 import type { User } from "@/lib/types"
 import { createNotification } from "@/lib/notifications"
 
@@ -8,17 +8,19 @@ export async function GET() {
   try {
     await requireAuth(["admin"])
     
-    const db = await getDb()
-    const usersCollection = db.collection<User>("users")
+    const users = await mysqlQuery(
+      `SELECT id, username, role, name, created_at as createdAt, updated_at as updatedAt FROM \`users\` ORDER BY created_at DESC`
+    ) as any[]
     
-    const users = await usersCollection
-      .find({}, { projection: { password: 0 } })
-      .sort({ createdAt: -1 })
-      .toArray()
+    // Map id to _id for frontend compatibility if needed
+    const mappedUsers = users.map(u => ({
+      ...u,
+      _id: u.id?.toString()
+    }))
     
     return NextResponse.json({
       success: true,
-      data: users,
+      data: mappedUsers,
     })
   } catch (error) {
     console.error("Get users error:", error)
@@ -45,12 +47,13 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    const db = await getDb()
-    const usersCollection = db.collection<User>("users")
-    
     // Check if username already exists
-    const existing = await usersCollection.findOne({ username: body.username })
-    if (existing) {
+    const existing = await mysqlQuery(
+      `SELECT id FROM \`users\` WHERE username = ? LIMIT 1`,
+      [body.username]
+    ) as any[]
+    
+    if (existing && existing.length > 0) {
       return NextResponse.json(
         { success: false, error: "Username already exists" },
         { status: 400 }
@@ -59,16 +62,12 @@ export async function POST(request: NextRequest) {
     
     const hashedPassword = await hashPassword(body.password)
     
-    const user: User = {
-      username: body.username,
-      password: hashedPassword,
-      role: body.role,
-      name: body.name,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
+    const result = await mysqlQuery(
+      `INSERT INTO \`users\` (username, password, role, name) VALUES (?, ?, ?, ?)`,
+      [body.username, hashedPassword, body.role, body.name]
+    ) as any
     
-    const result = await usersCollection.insertOne(user)
+    const insertId = result.insertId
     
     // Trigger notification
     try {
@@ -82,11 +81,17 @@ export async function POST(request: NextRequest) {
       console.error("⚠️ Failed to trigger user registration notification:", notifError)
     }
     
-    const { password: _, ...userWithoutPassword } = user
-    
     return NextResponse.json({
       success: true,
-      data: { ...userWithoutPassword, _id: result.insertedId },
+      data: {
+        id: insertId,
+        _id: insertId?.toString(),
+        username: body.username,
+        role: body.role,
+        name: body.name,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
     })
   } catch (error) {
     console.error("Create user error:", error)

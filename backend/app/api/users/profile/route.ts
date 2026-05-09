@@ -1,25 +1,31 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getDb } from "@/lib/mongodb"
 import { requireAuth, hashPassword, verifyPassword } from "@/lib/auth"
-import { ObjectId } from "mongodb"
+import { query as mysqlQuery } from "@/lib/mysql"
 import type { User } from "@/lib/types"
 
 // GET - Get logged in user profile details
 export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth()
+    const userIdNum = parseInt(user.userId)
     
-    const db = await getDb()
-    const usersCollection = db.collection<User>("users")
+    if (isNaN(userIdNum)) {
+      return NextResponse.json({ success: false, error: "Invalid user ID" }, { status: 400 })
+    }
     
-    const userDetails = await usersCollection.findOne(
-      { _id: new ObjectId(user.userId) },
-      { projection: { password: 0 } }
-    )
+    const rows = await mysqlQuery(
+      `SELECT id, username, role, name, created_at as createdAt, updated_at as updatedAt FROM \`users\` WHERE id = ? LIMIT 1`,
+      [userIdNum]
+    ) as any[]
+    
+    const userDetails = rows?.[0]
     
     if (!userDetails) {
       return NextResponse.json({ success: false, error: "User not found" }, { status: 404 })
     }
+    
+    // Set _id for frontend compatibility
+    userDetails._id = userDetails.id?.toString()
     
     return NextResponse.json({
       success: true,
@@ -38,25 +44,28 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const user = await requireAuth()
+    const userIdNum = parseInt(user.userId)
+    
+    if (isNaN(userIdNum)) {
+      return NextResponse.json({ success: false, error: "Invalid user ID" }, { status: 400 })
+    }
     
     const body = await request.json()
     const { name, currentPassword, newPassword } = body
     
-    const db = await getDb()
-    const usersCollection = db.collection<User>("users")
-    
     // Find complete user details including hashed password
-    const userDb = await usersCollection.findOne({ _id: new ObjectId(user.userId) })
+    const rows = await mysqlQuery(`SELECT * FROM \`users\` WHERE id = ? LIMIT 1`, [userIdNum]) as any[]
+    const userDb = rows?.[0]
+    
     if (!userDb) {
       return NextResponse.json({ success: false, error: "User not found" }, { status: 404 })
     }
     
-    const updateData: Partial<User> = {
-      updatedAt: new Date(),
-    }
+    let updatedName = userDb.name
+    let updatedPassword = userDb.password
     
     if (name && name.trim()) {
-      updateData.name = name.trim()
+      updatedName = name.trim()
     }
     
     // Handle password change if requested
@@ -76,7 +85,7 @@ export async function PUT(request: NextRequest) {
         )
       }
       
-      updateData.password = await hashPassword(newPassword)
+      updatedPassword = await hashPassword(newPassword)
     } else if (newPassword || currentPassword) {
       return NextResponse.json(
         { success: false, error: "Both current and new passwords are required to change password" },
@@ -85,9 +94,9 @@ export async function PUT(request: NextRequest) {
     }
     
     // Save to DB
-    await usersCollection.updateOne(
-      { _id: new ObjectId(user.userId) },
-      { $set: updateData }
+    await mysqlQuery(
+      `UPDATE \`users\` SET name = ?, password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      [updatedName, updatedPassword, userIdNum]
     )
     
     return NextResponse.json({

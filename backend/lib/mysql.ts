@@ -42,12 +42,27 @@ export async function initializeDatabase() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `;
+
+  const createUsersTableQuery = `
+    CREATE TABLE IF NOT EXISTS \`users\` (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      username VARCHAR(50) UNIQUE NOT NULL,
+      password VARCHAR(255) NOT NULL,
+      role VARCHAR(50) NOT NULL DEFAULT 'auditor',
+      name VARCHAR(100) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `;
   
   try {
     await query(createTableQuery);
     console.log(`✅ Table \`${tableName}\` is ready.`);
+    
+    await query(createUsersTableQuery);
+    console.log(`✅ Table \`users\` is ready.`);
   } catch (error) {
-    console.error(`❌ Error initializing MySQL table:`, error);
+    console.error(`❌ Error initializing MySQL tables:`, error);
     throw error;
   }
 }
