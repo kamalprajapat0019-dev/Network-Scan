@@ -161,8 +161,8 @@ export default function ProtectedLayout({
       <aside className="hidden md:flex w-64 flex-col bg-white border-r sticky top-0 h-screen overflow-y-auto">
         <div className="h-16 flex items-center px-6 border-b">
           <Link href="/dashboard" className="flex gap-2 items-center text-primary">
-            <img src="/logo.png" alt="Audit Portal Logo" className="h-8 w-auto object-contain" />
-            <span className="font-bold tracking-tight text-slate-900 ml-1">Audit Portal</span>
+            <img src="/logo.png" alt="Network Scan Logo" className="h-8 w-auto object-contain" />
+            <span className="font-bold tracking-tight text-slate-900 ml-1">Network Scan</span>
           </Link>
         </div>
         <nav className="flex-1 py-6 px-4 space-y-1">
@@ -213,7 +213,7 @@ export default function ProtectedLayout({
             </DropdownMenu>
             <div className="md:hidden font-bold flex items-center gap-2">
               <img src="/logo.png" alt="Logo" className="h-6 w-auto object-contain" />
-              Audit Portal
+              Network Scan
             </div>
           </div>
 

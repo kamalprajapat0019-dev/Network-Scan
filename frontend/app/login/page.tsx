@@ -43,10 +43,10 @@ export default function LoginPage() {
       <Card className="w-full max-w-md relative z-10 shadow-2xl border-none">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex items-center justify-center">
-            <img src="/logo.png" alt="Audit Portal Logo" className="h-20 w-auto object-contain" />
+            <img src="/logo.png" alt="Network Scan Logo" className="h-20 w-auto object-contain" />
           </div>
-          <CardTitle className="text-2xl font-bold text-primary">Audit Portal</CardTitle>
-          <CardDescription>Sign in to access the audit portal</CardDescription>
+          <CardTitle className="text-2xl font-bold text-primary">Network Scan</CardTitle>
+          <CardDescription>Sign in to access the network scan portal</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
