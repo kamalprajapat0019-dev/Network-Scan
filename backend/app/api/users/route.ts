@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getDb } from "@/lib/mongodb"
 import { requireAuth, hashPassword } from "@/lib/auth"
 import type { User } from "@/lib/types"
+import { createNotification } from "@/lib/notifications"
 
 export async function GET() {
   try {
@@ -68,6 +69,18 @@ export async function POST(request: NextRequest) {
     }
     
     const result = await usersCollection.insertOne(user)
+    
+    // Trigger notification
+    try {
+      await createNotification({
+        title: "New User Registered",
+        message: `A new user ${body.name} (${body.username}) was registered as ${body.role.toUpperCase()}.`,
+        type: "info",
+        link: "/users",
+      })
+    } catch (notifError) {
+      console.error("⚠️ Failed to trigger user registration notification:", notifError)
+    }
     
     const { password: _, ...userWithoutPassword } = user
     

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getDb } from "@/lib/mongodb"
 import { requireAuth } from "@/lib/auth"
 import type { AuditRecord } from "@/lib/types"
+import { createNotification } from "@/lib/notifications"
 
 function calculateScores(data: Partial<AuditRecord>) {
   // Calculate infrastructure score
@@ -159,6 +160,18 @@ export async function POST(request: NextRequest) {
     }
     
     const result = await auditsCollection.insertOne(audit)
+    
+    // Trigger notification
+    try {
+      await createNotification({
+        title: "New Audit Submitted",
+        message: `A new audit was submitted for center ${body.centerName} by ${user.name} with score ${scores.overallScore}%.`,
+        type: scores.overallScore >= 80 ? "success" : scores.overallScore >= 60 ? "info" : "warning",
+        link: `/audits`,
+      })
+    } catch (notifError) {
+      console.error("⚠️ Failed to trigger audit notification:", notifError)
+    }
     
     return NextResponse.json({
       success: true,

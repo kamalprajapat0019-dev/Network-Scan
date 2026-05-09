@@ -3,6 +3,7 @@ import { getDb } from "@/lib/mongodb"
 import { query as mysqlQuery, initializeDatabase } from "@/lib/mysql"
 import { requireApiAuth, requireAuth } from "@/lib/auth"
 import { ObjectId } from "mongodb"
+import { createNotification } from "@/lib/notifications"
 
 const formatToISTResponse = (dateVal: any) => {
   if (!dateVal) return dateVal
@@ -212,6 +213,18 @@ export async function POST(request: NextRequest) {
     }
     
     console.log("✅ Scan data saved successfully to MySQL:", { scanId, systemCount: body.systemCount })
+    
+    // Trigger notification
+    try {
+      await createNotification({
+        title: "New Network Scan",
+        message: `A new network scan was submitted for center ${body.centerName} (${body.centerCode}) by ${body.auditorName || user.name}.`,
+        type: "success",
+        link: `/network-scans/${scanId}`,
+      })
+    } catch (notifError) {
+      console.error("⚠️ Failed to trigger scan notification:", notifError)
+    }
     
     return NextResponse.json({
       success: true,
