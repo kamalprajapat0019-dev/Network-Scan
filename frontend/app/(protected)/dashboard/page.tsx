@@ -31,53 +31,6 @@ export default function DashboardPage() {
         if (data.success) {
           const fetchedStats = data.data
           
-          // Inject demo data if the database is empty
-          if (!fetchedStats.monthlyScans || fetchedStats.monthlyScans.length === 0) {
-            fetchedStats.monthlyScans = [
-              { month: "Jan", count: 120 },
-              { month: "Feb", count: 210 },
-              { month: "Mar", count: 180 },
-              { month: "Apr", count: 320 },
-              { month: "May", count: 250 },
-              { month: "Jun", count: 450 },
-            ]
-          }
-          
-          if (fetchedStats.totalScans === 0) {
-            fetchedStats.totalScans = 1259
-            fetchedStats.verifiedScans = 755
-            fetchedStats.pendingScans = 504
-            fetchedStats.scansByCenter = 42
-            fetchedStats.averageSystems = 124
-            
-            if (!fetchedStats.recentScans || fetchedStats.recentScans.length === 0) {
-              fetchedStats.recentScans = [
-                {
-                  _id: "demo1",
-                  auditorName: "Rebecca Moore",
-                  centerName: "Tech Hub Center",
-                  centerCode: "EXM-001",
-                  city: "New Delhi",
-                  systemCount: 150,
-                  status: "verified",
-                  scanDetails: { deviceBreakdown: { pcs: 145, printers: 5 } },
-                  createdAt: new Date().toISOString()
-                },
-                {
-                  _id: "demo2",
-                  auditorName: "John Doe",
-                  centerName: "Global Academy",
-                  centerCode: "EXM-042",
-                  city: "Mumbai",
-                  systemCount: 85,
-                  status: "pending",
-                  scanDetails: { deviceBreakdown: { pcs: 80, printers: 5 } },
-                  createdAt: new Date(Date.now() - 86400000).toISOString()
-                }
-              ]
-            }
-          }
-          
           setStats(fetchedStats)
         } else {
           setError(data.error || "Failed to fetch dashboard data")
