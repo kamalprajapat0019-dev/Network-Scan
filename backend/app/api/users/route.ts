@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireAuth, hashPassword } from "@/lib/auth"
-import { query as mysqlQuery } from "@/lib/mysql"
+import { query as mysqlQuery, initializeDatabase } from "@/lib/mysql"
 import type { User } from "@/lib/types"
 import { createNotification } from "@/lib/notifications"
 
 export async function GET() {
   try {
     await requireAuth(["admin"])
+    
+    // Ensure users table exists
+    await initializeDatabase()
     
     const users = await mysqlQuery(
       `SELECT id, username, role, name, created_at as createdAt, updated_at as updatedAt FROM \`users\` ORDER BY created_at DESC`
@@ -37,6 +40,9 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     await requireAuth(["admin"])
+    
+    // Ensure users table exists
+    await initializeDatabase()
     
     const body = await request.json()
     
