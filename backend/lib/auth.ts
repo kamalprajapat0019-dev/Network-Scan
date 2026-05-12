@@ -142,17 +142,29 @@ export async function initializeDefaultAdmin() {
     // Ensure database tables exist first
     await initializeDatabase()
     
-    const existingAdmins = await mysqlQuery(`SELECT id FROM \`users\` WHERE role = 'admin' LIMIT 1`) as any[]
+    const existingAdmins = await mysqlQuery(`SELECT id, password FROM \`users\` WHERE username = 'admin' LIMIT 1`) as any[]
+    
+    const adminPassword = process.env.INITIAL_ADMIN_PASSWORD || "admin123"
+    const hashedPassword = await hashPassword(adminPassword)
     
     if (!existingAdmins || existingAdmins.length === 0) {
-      const adminPassword = process.env.INITIAL_ADMIN_PASSWORD || "AdminSecuredDefaultPassword2026!"
-      const hashedPassword = await hashPassword(adminPassword)
-      
       await mysqlQuery(
         `INSERT INTO \`users\` (username, password, role, name) VALUES (?, ?, ?, ?)`,
         ["admin", hashedPassword, "admin", "System Administrator"]
       )
       console.log(`🔐 Default admin user created in MySQL. Username: admin`)
+    } else {
+      // If the admin user already exists but has a different password (e.g. the old hardcoded default),
+      // update/synchronize it to the correct one so login works seamlessly.
+      const existingAdmin = existingAdmins[0]
+      const isCorrectPassword = await verifyPassword(adminPassword, existingAdmin.password)
+      if (!isCorrectPassword) {
+        await mysqlQuery(
+          `UPDATE \`users\` SET password = ? WHERE username = 'admin'`,
+          [hashedPassword]
+        )
+        console.log(`🔐 Existing admin password updated/synchronized to default admin password in MySQL.`)
+      }
     }
   } catch (error) {
     console.error("❌ Failed to initialize default admin in MySQL:", error)
