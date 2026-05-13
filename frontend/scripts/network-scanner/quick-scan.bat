@@ -290,11 +290,19 @@ while ($keepScanning) {
             }
         }
         
-        # Hostname via DNS reverse lookup (fast local timeout)
-        $hostname = $ip
-        try {
-            $hostEntry = [System.Net.Dns]::GetHostEntry($ip)
-            if ($hostEntry.HostName) { $hostname = $hostEntry.HostName }
+# Function to check if hostname is just an IP string
+    function IsHostNameIPString {
+        param([string]$Value)
+        return $Value -match "^(25[0-5]|2[0-4]\d|1?\d{1,2})(?:\.(25[0-5]|2[0-4]\d|1?\d{1,2})){3}$"
+    }
+    
+    # Hostname via DNS reverse lookup (fast local timeout)
+    $hostname = $ip
+    try {
+        $hostEntry = [System.Net.Dns]::GetHostEntry($ip)
+        if ($hostEntry.HostName -and -not (IsHostNameIPString $hostEntry.HostName)) { 
+            $hostname = $hostEntry.HostName 
+        }
         } catch {}
     
         # Check device type using port checks and vendor OUI

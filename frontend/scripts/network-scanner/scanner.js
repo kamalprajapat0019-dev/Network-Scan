@@ -747,11 +747,17 @@ function checkPort(ip, port, timeout = CONFIG.portScanTimeout) {
   })
 }
 
+// Determine whether a returned hostname is just an IP string
+function isHostNameIpString(value) {
+  return typeof value === 'string' && /^(25[0-5]|2[0-4]\d|1?\d{1,2})(?:\.(25[0-5]|2[0-4]\d|1?\d{1,2})){3}$/.test(value.trim())
+}
+
 // Get hostname via DNS reverse lookup
 function getHostname(ip) {
   return new Promise((resolve) => {
     dns.reverse(ip, (err, hostnames) => {
-      resolve(err || !hostnames?.length ? null : hostnames[0])
+      const result = err || !hostnames?.length ? null : hostnames[0]
+      resolve(result)
     })
   })
 }
@@ -910,8 +916,10 @@ async function scanNetwork(networkInfo, onProgress) {
     // Get hostname
     const hostname = await getHostname(ip)
     const netbiosName = await getNetBIOSName(ip)
-    const displayName = netbiosName || hostname || ip
-    
+    const cleanHostname = hostname && isHostNameIpString(hostname) ? null : hostname
+    const cleanNetbiosName = netbiosName && isHostNameIpString(netbiosName) ? null : netbiosName
+    const displayName = cleanNetbiosName || cleanHostname || ip
+
     // Determine device type
     let deviceType = 'unknown'
     let confidence = 'low'

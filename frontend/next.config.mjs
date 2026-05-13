@@ -7,7 +7,7 @@ const nextConfig = {
     unoptimized: true,
   },
   async rewrites() {
-    const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://localhost:5001').replace(/\/$/, '')
+    const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001').replace(/\/$/, '')
     return [
       {
         source: '/api/:path*',
